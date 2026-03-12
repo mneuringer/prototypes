@@ -1,0 +1,99 @@
+name: Update Prototype Index
+
+on:
+  push:
+    paths:
+      - '*.html'
+      - '!index.html'
+
+jobs:
+  build-index:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate index.html
+        run: |
+          cat > index.html << 'HTMLEOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Homeroom Prototypes</title>
+            <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700&display=swap" rel="stylesheet">
+            <style>
+              * { box-sizing: border-box; margin: 0; padding: 0; }
+              body { font-family: 'Mulish', sans-serif; background: #FAFAFA; color: #0E2826; min-height: 100vh; }
+              .header { background: #003B3B; padding: 0 40px; height: 60px; display: flex; align-items: center; gap: 12px; }
+              .header-logo { font-size: 20px; font-weight: 700; color: white; display: flex; align-items: center; gap: 8px; }
+              .header-sub { color: #BFE5DD; font-size: 14px; }
+              .main { max-width: 900px; margin: 0 auto; padding: 40px 32px; }
+              h1 { font-size: 24px; font-weight: 700; color: #003B3B; margin-bottom: 6px; }
+              .subtitle { font-size: 14px; color: #646464; margin-bottom: 32px; }
+              .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+              .card { background: white; border-radius: 8px; border: 1px solid #E4E4E4; padding: 20px; transition: border-color 0.15s, box-shadow 0.15s; }
+              .card:hover { border-color: #003B3B; box-shadow: 0 2px 12px rgba(0,59,59,0.08); }
+              .card a { text-decoration: none; }
+              .card-title { font-size: 15px; font-weight: 700; color: #003B3B; margin-bottom: 6px; line-height: 1.4; }
+              .card-date { font-size: 12px; color: #8F8F8F; margin-bottom: 12px; }
+              .card-link { display: inline-block; background: #003B3B; color: white; border-radius: 4px; padding: 6px 16px; font-size: 13px; font-weight: 700; transition: background 0.15s; }
+              .card-link:hover { background: #326161; }
+              .empty { text-align: center; padding: 60px 0; color: #8F8F8F; font-size: 15px; }
+              .updated { font-size: 11px; color: #8F8F8F; margin-top: 40px; text-align: right; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="header-logo">🏠 Homeroom</div>
+              <span class="header-sub">· Prototypes</span>
+            </div>
+            <div class="main">
+              <h1>Prototypes</h1>
+              <p class="subtitle">All HTML prototypes in this repository. Updated automatically on each push.</p>
+              <div class="grid" id="grid">
+          HTMLEOF
+
+          # Find all HTML files except index.html, sorted by modified date (newest first)
+          files=$(find . -maxdepth 1 -name "*.html" ! -name "index.html" -printf "%T@ %f\n" | sort -rn | awk '{print $2}')
+
+          if [ -z "$files" ]; then
+            echo '<div class="empty">No prototypes yet. Upload an HTML file to get started.</div>' >> index.html
+          else
+            for file in $files; do
+              # Convert filename to title: remove .html, replace - and _ with spaces, title case
+              title=$(echo "$file" | sed 's/\.html$//' | sed 's/[-_]/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2); print}')
+              # Get file date
+              date=$(date -r "$file" "+%B %d, %Y" 2>/dev/null || echo "")
+              cat >> index.html << CARDEOF
+              <div class="card">
+                <div class="card-title">$title</div>
+                <div class="card-date">$date</div>
+                <a class="card-link" href="$file" target="_blank">Open prototype →</a>
+              </div>
+          CARDEOF
+            done
+          fi
+
+          cat >> index.html << 'HTMLEOF2'
+              </div>
+              <p class="updated">Last updated: $(date "+%B %d, %Y at %H:%M UTC")</p>
+            </div>
+          </body>
+          </html>
+          HTMLEOF2
+
+          # Fix the timestamp (shell expansion doesn't work inside heredoc)
+          timestamp=$(date "+%B %d, %Y at %H:%M UTC")
+          sed -i "s/\$(date \"+%B %d, %Y at %H:%M UTC\")/$timestamp/" index.html
+
+      - name: Commit and push index.html
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --staged --quiet || git commit -m "Auto-update prototype index"
+          git push
