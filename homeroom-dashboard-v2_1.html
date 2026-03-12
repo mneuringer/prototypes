@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homeroom — Organizer Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ── DESIGN TOKENS (from Figma) ───────────────────────────────────────── */
+  :root {
+    /* Primary */
+    --green:            #003B3B;
+    --green-hover:      #326161;
+    --green-pressed:    #003434;
+    --green-black:      #0E2826;
+    /* Secondary */
+    --blue:             #366F81;
+    --teal:             #BFE5DD;
+    --light-green:      #DFE9A0;
+    --salmon:           #FF8D74;
+    --mauve:            #864F58;
+    --pink:             #BF6E7C;
+    --light-pink:       #E1D0D6;
+    /* Navigation */
+    --nav-bg:           #1C4856;
+    --nav-footer:       #5C363C;
+    /* States */
+    --success-bg:       #E9F2E6;
+    --success-border:   #BFE5DD;
+    --warning-bg:       #FBEBD2;
+    --error-red:        #DD0000;
+    --secondary-hover:  #E1E7E7;
+    /* Grays */
+    --form-gray:        #F0F0F0;
+    --light-gray:       #F1F1F1;
+    --light-med-gray:   #E4E4E4;
+    --medium-gray:      #D8D8D8;
+    --dark-gray:        #8F8F8F;
+    /* Page */
+    --page-bg:          #FAFAFA;
+    --white:            #FFFFFF;
+    --body-text:        #0E2826;
+    --muted-text:       #646464;
+    --border:           #E4E4E4;
+  }
+
+  /* ── RESET ─────────────────────────────────────────────────────────────── */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Mulish', sans-serif;
+    background: var(--page-bg);
+    color: var(--body-text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  button { cursor: pointer; font-family: inherit; }
+  a { text-decoration: none; }
+
+  /* ── TYPOGRAPHY (from Figma) ────────────────────────────────────────────── */
+  .title-1  { font-size: 36px; font-weight: 700; line-height: 1.4; color: var(--green); }
+  .title-2  { font-size: 24px; font-weight: 700; line-height: 1.4; color: var(--green); }
+  .sub-1    { font-size: 20px; font-weight: 700; line-height: 1.4; color: var(--green); }
+  .sub-2    { font-size: 16px; font-weight: 700; line-height: 1.4; color: var(--green); }
+  .label    { font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--green); }
+  .body     { font-size: 14px; font-weight: 400; line-height: 1.4; color: var(--body-text); }
+  .caption  { font-size: 12px; font-weight: 400; line-height: 1.4; color: var(--muted-text); }
+
+  /* ── BUTTONS ────────────────────────────────────────────────────────────── */
+  .btn-primary {
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 20px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: var(--green-hover); }
+  .btn-primary:active { background: var(--green-pressed); }
+
+  .btn-secondary {
+    background: white;
+    color: var(--green);
+    border: 1.5px solid var(--green);
+    border-radius: 4px;
+    padding: 6px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .btn-secondary:hover { background: var(--secondary-hover); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--green);
+    border: none;
+    padding: 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: underline;
+  }
+
+  /* ── LAYOUT ─────────────────────────────────────────────────────────────── */
+  .app { display: flex; flex: 1; }
+
+  /* ── LEFT NAV ───────────────────────────────────────────────────────────── */
+  .nav {
+    width: 220px;
+    min-height: 100vh;
+    background: var(--nav-bg);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+  }
+  .nav-body { flex: 1; padding: 30px 28px; display: flex; flex-direction: column; gap: 24px; }
+  .nav-section { display: flex; flex-direction: column; gap: 10px; }
+  .nav-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.4;
+  }
+  .nav-section-header .chevron { font-size: 10px; color: white; opacity: 0.7; }
+  .nav-links { padding-left: 28px; display: flex; flex-direction: column; gap: 10px; }
+  .nav-link {
+    font-size: 16px;
+    font-weight: 400;
+    color: white;
+    line-height: 1.4;
+    opacity: 0.85;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .nav-link:hover { opacity: 1; }
+  .nav-link.active { font-weight: 700; opacity: 1; }
+  .nav-footer {
+    background: var(--nav-footer);
+    padding: 24px 28px;
+    font-size: 14px;
+    font-weight: 400;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-logo {
+    padding: 20px 28px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  /* ── MAIN CONTENT ───────────────────────────────────────────────────────── */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+  /* ── TOP BAR ────────────────────────────────────────────────────────────── */
+  .topbar {
+    background: var(--green);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 8px; }
+  .topbar-school { font-size: 16px; font-weight: 700; color: white; }
+  .topbar-season { font-size: 13px; color: var(--teal); display: flex; align-items: center; gap: 6px; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .topbar-tabs { display: flex; gap: 4px; }
+  .topbar-tab {
+    padding: 6px 16px;
+    border-radius: 4px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+  .topbar-tab.active { background: white; color: var(--green); }
+  .topbar-tab.inactive { background: transparent; color: white; border: 1.5px solid rgba(255,255,255,0.4); }
+  .topbar-tab.inactive:hover { background: rgba(255,255,255,0.1); }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--teal);
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ── PAGE BODY ──────────────────────────────────────────────────────────── */
+  .page-body { padding: 28px 32px; flex: 1; }
+  .page-greeting { margin-bottom: 24px; }
+  .page-greeting h1 { font-size: 24px; font-weight: 700; color: var(--green); line-height: 1.4; margin-bottom: 2px; }
+  .page-greeting p { font-size: 14px; color: var(--muted-text); }
+
+  /* ── CARDS ──────────────────────────────────────────────────────────────── */
+  .card {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 20px;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .card-title { font-size: 16px; font-weight: 700; color: var(--green); line-height: 1.4; }
+  .card-meta { font-size: 12px; color: var(--muted-text); margin-left: auto; }
+
+  /* ── GRID ───────────────────────────────────────────────────────────────── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .col-span-2 { grid-column: 1 / -1; }
+  .mb-5 { margin-bottom: 20px; }
+
+  /* ── BADGE ──────────────────────────────────────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  .badge-red    { background: #FFE4E4; color: var(--error-red); }
+  .badge-green  { background: var(--success-bg); color: var(--green); }
+  .badge-teal   { background: var(--teal); color: var(--green-black); }
+  .badge-orange { background: var(--warning-bg); color: #7A4500; }
+  .badge-blue   { background: #DCF0F5; color: #1C4856; }
+  .badge-mauve  { background: var(--light-pink); color: var(--mauve); }
+
+  /* ── ATTENTION ITEMS ────────────────────────────────────────────────────── */
+  .attention-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .attention-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: white;
+    gap: 12px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .attention-item:hover { border-color: var(--green); background: #F5F9F9; }
+  .attention-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .attention-icon { font-size: 18px; flex-shrink: 0; }
+  .attention-text { font-size: 13px; color: var(--body-text); line-height: 1.4; }
+
+  /* ── ACTIVITY LIST ──────────────────────────────────────────────────────── */
+  .activity-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid;
+    margin-bottom: 8px;
+  }
+  .activity-item:last-child { margin-bottom: 0; }
+  .activity-item.live { background: var(--success-bg); border-color: var(--success-border); }
+  .activity-item.upcoming { background: var(--light-gray); border-color: var(--light-med-gray); }
+  .activity-left { display: flex; align-items: center; gap: 10px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-live { background: #2D8B5A; box-shadow: 0 0 0 3px var(--success-bg); animation: pulse 2s infinite; }
+  .dot-upcoming { background: var(--medium-gray); }
+  .activity-name { font-size: 13px; font-weight: 600; color: var(--body-text); }
+  .activity-sub { font-size: 11px; color: var(--muted-text); margin-top: 1px; }
+  .activity-count { font-size: 13px; font-weight: 700; color: var(--green); }
+  .activity-count.pending { color: var(--dark-gray); font-weight: 400; }
+
+  /* ── STAT BOXES ─────────────────────────────────────────────────────────── */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-box {
+    background: var(--light-gray);
+    border-radius: 8px;
+    padding: 12px 14px;
+    border: 1px solid var(--light-med-gray);
+  }
+  .stat-label { font-size: 11px; font-weight: 600; color: var(--muted-text); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .stat-value { font-size: 22px; font-weight: 700; color: var(--green); line-height: 1.2; }
+  .stat-sub { font-size: 11px; margin-top: 3px; }
+  .stat-sub.up { color: #2D8B5A; }
+  .stat-sub.neutral { color: var(--muted-text); }
+
+  /* ── PULSE ROWS ─────────────────────────────────────────────────────────── */
+  .pulse-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 12px;
+    border-radius: 4px;
+    border: 1px solid;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .pulse-row:last-child { margin-bottom: 0; }
+  .pulse-row.good { background: var(--success-bg); border-color: var(--success-border); color: var(--green-black); }
+  .pulse-row.warn { background: var(--warning-bg); border-color: #F5D9A8; color: #5C3A00; }
+  .pulse-row .val { font-weight: 700; }
+
+  /* ── AGENT ITEMS ─────────────────────────────────────────────────────────── */
+  .agent-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--light-gray);
+    border-radius: 4px;
+    border: 1px solid var(--light-med-gray);
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: var(--body-text);
+    line-height: 1.4;
+  }
+  .agent-item:last-child { margin-bottom: 0; }
+
+  /* ── UPCOMING ────────────────────────────────────────────────────────────── */
+  .upcoming-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .upcoming-item:last-child { margin-bottom: 0; }
+  .date-pill {
+    min-width: 46px;
+    background: var(--form-gray);
+    border-radius: 4px;
+    padding: 4px 6px;
+    text-align: center;
+  }
+  .date-month { font-size: 10px; font-weight: 700; color: var(--muted-text); text-transform: uppercase; }
+  .date-day   { font-size: 16px; font-weight: 700; color: var(--green); line-height: 1.2; }
+
+  /* ── DIVIDER ─────────────────────────────────────────────────────────────── */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* ── STATUS DOT ──────────────────────────────────────────────────────────── */
+  .status-live { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--teal); }
+  .status-live-dot { width: 8px; height: 8px; background: #5BD4A0; border-radius: 50%; box-shadow: 0 0 0 2px rgba(91,212,160,0.3); animation: pulse 2s infinite; }
+
+  /* ── EMAIL DIGEST ────────────────────────────────────────────────────────── */
+  .digest-wrap { max-width: 620px; margin: 32px auto; padding: 0 16px 48px; }
+  .email-chrome {
+    background: var(--form-gray);
+    border-radius: 8px 8px 0 0;
+    padding: 10px 16px;
+    font-size: 12px;
+    color: var(--muted-text);
+    border: 1px solid var(--border);
+    border-bottom: none;
+  }
+  .email-chrome div { margin-bottom: 2px; }
+  .email-chrome div:last-child { margin-bottom: 0; }
+  .email-body {
+    background: white;
+    border-radius: 0 0 8px 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .email-header { background: var(--green); padding: 28px 32px; }
+  .email-header-logo { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .email-header-logo span { font-size: 20px; font-weight: 700; color: white; }
+  .email-title { font-size: 22px; font-weight: 700; color: white; line-height: 1.4; }
+  .email-date { font-size: 13px; color: var(--teal); margin-top: 4px; }
+  .email-content { padding: 24px 32px; }
+  .email-greeting { font-size: 15px; color: var(--body-text); line-height: 1.6; margin-bottom: 24px; }
+  .email-section { margin-bottom: 24px; }
+  .email-section-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .email-section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--green); }
+  .email-action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--light-gray);
+    border-radius: 4px;
+    border: 1px solid var(--light-med-gray);
+    margin-bottom: 8px;
+    gap: 12px;
+  }
+  .email-action-row:last-child { margin-bottom: 0; }
+  .email-action-left { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--body-text); }
+  .email-action-link { font-size: 12px; color: var(--green); font-weight: 700; white-space: nowrap; }
+  .email-pulse-banner {
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+  }
+  .email-pulse-title { font-size: 14px; font-weight: 700; color: var(--green); margin-bottom: 2px; }
+  .email-pulse-sub { font-size: 13px; color: var(--green-hover); }
+  .email-data-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .email-data-row:last-child { border-bottom: none; }
+  .email-data-label { color: var(--muted-text); }
+  .email-data-val { font-weight: 700; color: var(--body-text); }
+  .email-agent-row {
+    display: flex;
+    gap: 10px;
+    padding: 9px 12px;
+    background: var(--light-gray);
+    border-radius: 4px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--body-text);
+  }
+  .email-agent-row:last-child { margin-bottom: 0; }
+  .email-upcoming-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .email-upcoming-row:last-child { border-bottom: none; }
+  .email-upcoming-date { color: var(--muted-text); min-width: 46px; }
+  .email-cta { text-align: center; padding: 8px 0 4px; }
+  .email-footer { font-size: 11px; color: var(--dark-gray); text-align: center; line-height: 1.7; margin-top: 16px; }
+
+  /* ── ANIMATIONS ──────────────────────────────────────────────────────────── */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* ── VIEWS ───────────────────────────────────────────────────────────────── */
+  .view { display: none; flex: 1; }
+  .view.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- LEFT NAV -->
+  <nav class="nav">
+    <div class="nav-logo">🏠 Homeroom</div>
+    <div class="nav-body">
+      <div class="nav-section">
+        <div class="nav-section-header">
+          <span>🏫</span> School <span class="chevron">▲</span>
+        </div>
+        <div class="nav-links">
+          <span class="nav-link active">Dashboard</span>
+          <span class="nav-link">Schedule</span>
+          <span class="nav-link">Season</span>
+          <span class="nav-link">Enrollments</span>
+          <span class="nav-link">Attendance</span>
+          <span class="nav-link">Families</span>
+          <span class="nav-link">Providers</span>
+          <span class="nav-link">Messages</span>
+          <span class="nav-link">Reports</span>
+          <span class="nav-link">Setup</span>
+        </div>
+      </div>
+    </div>
+    <div class="nav-footer">⚙ Help desk</div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-school">Riverside Academy</span>
+        <span class="topbar-season">
+          <span class="status-live-dot"></span>
+          Spring Enrichment · Open
+        </span>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-tabs">
+          <button class="topbar-tab active" onclick="switchView('dashboard', this)">📊 Dashboard</button>
+          <button class="topbar-tab inactive" onclick="switchView('digest', this)">📧 Weekly Digest</button>
+        </div>
+        <div class="avatar">K</div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="view-dashboard" class="view active">
+      <div class="page-body">
+
+        <div class="page-greeting">
+          <h1>Good morning, Kate ☀️</h1>
+          <p class="body">Thursday, March 12 · 4 items need your attention today</p>
+        </div>
+
+        <!-- Needs Attention (full width) -->
+        <div class="card mb-5">
+          <div class="card-header">
+            <span>🔴</span>
+            <span class="card-title">Needs Your Attention</span>
+            <span class="badge badge-red">4</span>
+          </div>
+          <div class="attention-grid">
+
+            <div class="attention-item">
+              <div class="attention-left">
+                <span class="attention-icon">💳</span>
+                <div>
+                  <div style="margin-bottom:4px"><span class="badge badge-orange">Finance</span></div>
+                  <div class="attention-text">12 unpaid balances totaling $1,840</div>
+                </div>
+              </div>
+              <button class="btn-secondary">Send reminders →</button>
+            </div>
+
+            <div class="attention-item">
+              <div class="attention-left">
+                <span class="attention-icon">📋</span>
+                <div>
+                  <div style="margin-bottom:4px"><span class="badge badge-mauve">Provider</span></div>
+                  <div class="attention-text">Chess Masters hasn't confirmed Spring schedule</div>
+                </div>
+              </div>
+              <button class="btn-secondary">Follow up →</button>
+            </div>
+
+            <div class="attention-item">
+              <div class="attention-left">
+                <span class="attention-icon">🗓️</span>
+                <div>
+                  <div style="margin-bottom:4px"><span class="badge badge-green">Program</span></div>
+                  <div class="attention-text">Draft Spring season is ready for your review</div>
+                </div>
+              </div>
+              <button class="btn-primary">Review season →</button>
+            </div>
+
+            <div class="attention-item">
+              <div class="attention-left">
+                <span class="attention-icon">💬</span>
+                <div>
+                  <div style="margin-bottom:4px"><span class="badge badge-blue">Families</span></div>
+                  <div class="attention-text">3 family messages awaiting your response</div>
+                </div>
+              </div>
+              <button class="btn-secondary">View messages →</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 2-col grid -->
+        <div class="grid-2">
+
+          <!-- Today's Activities -->
+          <div class="card">
+            <div class="card-header">
+              <span>📅</span>
+              <span class="card-title">Today's Activities</span>
+            </div>
+
+            <div class="activity-item live">
+              <div class="activity-left">
+                <div class="dot dot-live"></div>
+                <div>
+                  <div class="activity-name">Chess Club</div>
+                  <div class="activity-sub">3:00 PM · Mr. Patel</div>
+                </div>
+              </div>
+              <div class="activity-count">11 / 14 attended</div>
+            </div>
+
+            <div class="activity-item live">
+              <div class="activity-left">
+                <div class="dot dot-live"></div>
+                <div>
+                  <div class="activity-name">Art Studio</div>
+                  <div class="activity-sub">3:00 PM · Ms. Rivera</div>
+                </div>
+              </div>
+              <div class="activity-count">12 / 12 attended</div>
+            </div>
+
+            <div class="activity-item upcoming">
+              <div class="activity-left">
+                <div class="dot dot-upcoming"></div>
+                <div>
+                  <div class="activity-name">Basketball</div>
+                  <div class="activity-sub">4:00 PM · Coach Davis</div>
+                </div>
+              </div>
+              <div class="activity-count pending">18 enrolled</div>
+            </div>
+
+            <div class="activity-item upcoming">
+              <div class="activity-left">
+                <div class="dot dot-upcoming"></div>
+                <div>
+                  <div class="activity-name">Coding Club</div>
+                  <div class="activity-sub">4:00 PM · Ms. Chen</div>
+                </div>
+              </div>
+              <div class="activity-count pending">10 enrolled</div>
+            </div>
+          </div>
+
+          <!-- Program Pulse -->
+          <div class="card">
+            <div class="card-header">
+              <span>📈</span>
+              <span class="card-title">Program Pulse</span>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-box">
+                <div class="stat-label">Enrollments</div>
+                <div class="stat-value">287</div>
+                <div class="stat-sub up">↑ 12 vs. last year</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Revenue</div>
+                <div class="stat-value">$41k</div>
+                <div class="stat-sub neutral">$3k remaining</div>
+              </div>
+            </div>
+            <div class="pulse-row good">
+              <span>🏆 Top activity: Dance</span>
+              <span class="val">32 enrolled · 2 waitlisted</span>
+            </div>
+            <div class="pulse-row warn">
+              <span>⚠️ Low fill: Robotics</span>
+              <span class="val">8 / 20 spots</span>
+            </div>
+          </div>
+
+          <!-- Agent Activity -->
+          <div class="card">
+            <div class="card-header">
+              <span>🤖</span>
+              <span class="card-title">Your Assistant Did This</span>
+              <span class="card-meta">Today</span>
+            </div>
+            <div class="agent-item"><span>💳</span><span>Sent payment reminders to 6 families → 2 paid ($340 collected)</span></div>
+            <div class="agent-item"><span>💬</span><span>Answered 7 family questions via chat</span></div>
+            <div class="agent-item"><span>📋</span><span>Sent attendance rosters to 6 instructors this morning</span></div>
+            <div class="agent-item"><span>🎉</span><span>Promoted 2 students off the waitlist for K-Pop Demon Hunters Club</span></div>
+            <div class="agent-item"><span>🔄</span><span>Switched 2 families into a different activity per their request</span></div>
+          </div>
+
+          <!-- Coming Up -->
+          <div class="card">
+            <div class="card-header">
+              <span>🗓️</span>
+              <span class="card-title">Coming Up</span>
+            </div>
+            <div class="upcoming-item">
+              <div class="date-pill"><div class="date-month">Mar</div><div class="date-day">15</div></div>
+              <span class="body">No aftercare — teacher training day</span>
+            </div>
+            <div class="upcoming-item">
+              <div class="date-pill"><div class="date-month">Mar</div><div class="date-day">22</div></div>
+              <span class="body">Spring enrollment closes</span>
+            </div>
+            <div class="upcoming-item">
+              <div class="date-pill"><div class="date-month">Apr</div><div class="date-day">1</div></div>
+              <span class="body">Summer camp early bird opens</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /dashboard view -->
+
+    <!-- DIGEST VIEW -->
+    <div id="view-digest" class="view">
+      <div class="digest-wrap">
+
+        <div class="email-chrome">
+          <div><strong>From:</strong> Homeroom Assistant &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="274f424b4b48674f484a425548484a0944484a">[email&#160;protected]</a>&gt;</div>
+          <div><strong>To:</strong> Kate Nguyen &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="432822372603312a352631302a272622202227262e3a6d2c3124">[email&#160;protected]</a>&gt;</div>
+          <div><strong>Subject:</strong> 🏠 Your Homeroom Digest — Riverside Academy · Mar 10–16</div>
+        </div>
+
+        <div class="email-body">
+          <div class="email-header">
+            <div class="email-header-logo">
+              <span style="font-size:22px">🏠</span>
+              <span>Homeroom</span>
+            </div>
+            <div class="email-title">Your weekly snapshot,<br>Riverside Academy</div>
+            <div class="email-date">Week of March 10–16, 2026</div>
+          </div>
+
+          <div class="email-content">
+            <p class="email-greeting">
+              Hi Kate 👋 — here's your Homeroom snapshot for the week. Four things need your attention, and your assistant handled a lot in the background.
+            </p>
+
+            <!-- Action Required -->
+            <div class="email-section">
+              <div class="email-section-head">
+                <span>🔴</span>
+                <span class="email-section-title">Action Required</span>
+                <span class="badge badge-red">4 items</span>
+              </div>
+              <div class="email-action-row">
+                <div class="email-action-left"><span>💳</span> 12 unpaid balances totaling $1,840</div>
+                <span class="email-action-link">Send reminders →</span>
+              </div>
+              <div class="email-action-row">
+                <div class="email-action-left"><span>📋</span> Chess Masters hasn't confirmed Spring schedule</div>
+                <span class="email-action-link">Follow up →</span>
+              </div>
+              <div class="email-action-row">
+                <div class="email-action-left"><span>🗓️</span> Draft Spring season is ready for your review</div>
+                <span class="email-action-link">Review season →</span>
+              </div>
+              <div class="email-action-row">
+                <div class="email-action-left"><span>💬</span> 3 family messages awaiting your response</div>
+                <span class="email-action-link">View messages →</span>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Program Pulse -->
+            <div class="email-section">
+              <div class="email-section-head">
+                <span>📊</span>
+                <span class="email-section-title">Program Pulse</span>
+              </div>
+              <div class="email-pulse-banner">
+                <div class="email-pulse-title">Spring Enrichment — on track ↑</div>
+                <div class="email-pulse-sub">287 enrollments · $41,200 collected · up 4% vs. last spring</div>
+              </div>
+              <div class="email-data-row">
+                <span class="email-data-label">🏆 Top activity</span>
+                <span class="email-data-val">Dance · 32 enrolled, 2 waitlisted</span>
+              </div>
+              <div class="email-data-row">
+                <span class="email-data-label">⚠️ Needs attention</span>
+                <span class="email-data-val">Robotics · 8/20 spots filled</span>
+              </div>
+              <div class="email-data-row">
+                <span class="email-data-label">📅 Enrollment closes</span>
+                <span class="email-data-val">March 22</span>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Agent Did This -->
+            <div class="email-section">
+              <div class="email-section-head">
+                <span>🤖</span>
+                <span class="email-section-title">Your Assistant Did This</span>
+              </div>
+              <div class="email-agent-row"><span>💳</span> Sent payment reminders to 6 families → 2 paid ($340 collected)</div>
+              <div class="email-agent-row"><span>💬</span> Answered 7 family questions via chat</div>
+              <div class="email-agent-row"><span>📋</span> Sent attendance rosters to 6 instructors this morning</div>
+              <div class="email-agent-row"><span>🎉</span> Promoted 2 students off the waitlist for K-Pop Demon Hunters Club</div>
+              <div class="email-agent-row"><span>🔄</span> Switched 2 families into a different activity per their request</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Coming Up -->
+            <div class="email-section">
+              <div class="email-section-head">
+                <span>📅</span>
+                <span class="email-section-title">Coming Up</span>
+              </div>
+              <div class="email-upcoming-row">
+                <span class="email-upcoming-date">Mar 15</span>
+                <span>No aftercare — teacher training day</span>
+              </div>
+              <div class="email-upcoming-row">
+                <span class="email-upcoming-date">Mar 22</span>
+                <span>Spring enrollment closes</span>
+              </div>
+              <div class="email-upcoming-row">
+                <span class="email-upcoming-date">Apr 1</span>
+                <span>Summer camp early bird opens</span>
+              </div>
+            </div>
+
+            <!-- CTA -->
+            <div class="email-cta">
+              <button class="btn-primary" style="font-size:15px;padding:12px 32px;">Open Homeroom →</button>
+            </div>
+
+            <p class="email-footer">
+              Homeroom · Riverside Academy · Generated March 12, 2026<br>
+              <a href="#" style="color:var(--dark-gray)">Manage digest preferences</a> ·
+              <a href="#" style="color:var(--dark-gray)">Unsubscribe</a>
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /digest view -->
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  function switchView(view, btn) {
+    document.querySelectorAll('.vie
